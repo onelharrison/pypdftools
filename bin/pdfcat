@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+import warnings
+
+import shellescape as se
+from PyPDF2 import PdfFileMerger
+
+
+def pdfcat(pdfs, output):
+    pdf_file_objs = []
+
+    try:
+        for pdf in pdfs:
+            pdf_file_objs.append(open(pdf, "rb"))
+
+        pdf_file_merger = PdfFileMerger()
+        for pdf_file_obj in pdf_file_objs:
+            pdf_file_merger.append(pdf_file_obj)
+
+        with open(output, "wb") as pdf_out:
+            pdf_file_merger.write(pdf_out)
+    except FileNotFoundError as e:
+        print(f"{__file__}: {se.quote(e.filename)}: {e.strerror}")
+        sys.exit(e.errno)
+    finally:
+        for pdf_file_obj in pdf_file_objs:
+            pdf_file_obj.close()
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Concatenate PDF FILE(s) to OUTPUT file"
+    )
+    parser.add_argument("pdfs", metavar="FILE", nargs="+", help="FILE to concatenate")
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="out.pdf",
+        help="write to output file (default: out.pdf)",
+    )
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    warnings.filterwarnings(
+        "ignore"
+    )  # Suppress harmless warnings about excess whitespace
+    args = parse_args()
+    pdfcat(pdfs=args.pdfs, output=args.output)
